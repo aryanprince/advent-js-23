@@ -6,15 +6,52 @@ generator client {
 }
 
 datasource db {
-    provider = "sqlite"
+    provider = "postgresql"
     url      = env("DATABASE_URL")
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
+model User {
+    id        Int      @id
+    email     String
+    password  String
+    firstName String
+    lastName  String
+    avatar    String
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    @@index([name])
+    role            Role
+    UserEventStatus UserEventStatus[]
+}
+
+model UserEventStatus {
+    id     String     @id
+    status UserStatus
+
+    userId  Int
+    User    User   @relation(fields: [userId], references: [id])
+    eventId String
+    Event   Event  @relation(fields: [eventId], references: [id])
+}
+
+model Event {
+    id           String   @id
+    name         String
+    date         DateTime
+    createdAt    DateTime
+    updatedAt    DateTime
+    sendReminder Boolean
+
+    UserEventStatus UserEventStatus[]
+}
+
+enum Role {
+    ADMIN
+    USER
+}
+
+enum UserStatus {
+    INVITED
+    DECLINED
+    ACCEPTED
 }
