@@ -10,14 +10,68 @@ generator client {
 
 // Define your own datamodels here and run `yarn redwood prisma migrate dev`
 // to create migrations for them and apply to your dev DB.
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  firstName String?
+  lastName  String?
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  role          Role         @default(USER)
+  UserStatus    UserStatus[]
+  Wishlist      Wishlist[]
+  PairingSanta  Pairing[]    @relation("pairingSanta")
+  PairingPerson Pairing[]    @relation("pairingPerson")
+  ThankYouFrom  ThankYou[]   @relation("fromUserId")
+  ThankYouTo    ThankYou[]   @relation("toUserId")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+model UserStatus {
+  id     String @id @default(cuid())
+  status Status
+
+  userId  Int
+  User    User   @relation(fields: [userId], references: [id])
+  eventId String
+  Event   Event  @relation(fields: [eventId], references: [id])
+}
+
+enum Status {
+  INVITED
+  DECLINED
+  ACCEPTED
+}
+
+model Event {
+  id           String   @id @default(cuid())
+  name         String
+  date         DateTime
+  sendReminder Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  UserStatus UserStatus[]
+  Wishlist   Wishlist[]
+  Pairings   Pairing[]
+  ThankYou   ThankYou[]
+}
+
 model Wishlist {
-  id              Int    @id
+  id              Int     @id @default(autoincrement())
   name            String
   url             String
-  order           Int
-  siteImage       String
-  siteTitle       String
-  siteDescription String
+  order           Int?
+  siteImage       String?
+  siteTitle       String?
+  siteDescription String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -29,81 +83,27 @@ model Wishlist {
 }
 
 model Pairing {
-  id        Int      @id
+  id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  eventId       String
-  Event         Event  @relation(fields: [eventId], references: [id])
-  santaId       Int
-  PairingSanta  User   @relation("pairingSanta", fields: [santaId], references: [id])
-  personId      Int
-  PairingPerson User   @relation("pairingPerson", fields: [personId], references: [id])
+  eventId         String
+  Event           Event  @relation(fields: [eventId], references: [id])
+  pairingSantaId  Int
+  PairingSanta    User   @relation(fields: [pairingSantaId], references: [id], name: "pairingSanta")
+  pairingPersonId Int
+  PairingPerson   User   @relation(fields: [pairingPersonId], references: [id], name: "pairingPerson")
 }
 
 model ThankYou {
-  id        String   @id
+  id        String   @id @default(cuid())
   message   String
   createdAt DateTime @default(now())
 
   eventId    String
   Event      Event  @relation(fields: [eventId], references: [id])
   fromUserId Int
-  FromUser   User   @relation("fromUserId", fields: [fromUserId], references: [id])
+  FromUser   User   @relation(fields: [fromUserId], references: [id], name: "fromUserId")
   toUserId   Int
-  ToUser     User   @relation("toUserId", fields: [toUserId], references: [id])
-}
-
-model User {
-  id        Int      @id
-  email     String
-  password  String
-  firstName String
-  lastName  String
-  avatar    String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  role            Role
-  UserEventStatus UserEventStatus[]
-  Wishlist        Wishlist[]
-  PairingSanta    Pairing[]         @relation("pairingSanta")
-  PairingPerson   Pairing[]         @relation("pairingPerson")
-  ThankYouFrom    ThankYou[]        @relation("fromUserId")
-  ThankYouTo      ThankYou[]        @relation("toUserId")
-}
-
-model UserEventStatus {
-  id     String     @id
-  status UserStatus
-
-  userId  Int
-  User    User   @relation(fields: [userId], references: [id])
-  eventId String
-  Event   Event  @relation(fields: [eventId], references: [id])
-}
-
-model Event {
-  id           String   @id
-  name         String
-  date         DateTime
-  sendReminder Boolean
-  createdAt    DateTime
-  updatedAt    DateTime
-
-  UserEventStatus UserEventStatus[]
-  Wishlist        Wishlist[]
-  Pairings        Pairing[]
-  ThankYou        ThankYou[]
-}
-
-enum Role {
-  ADMIN
-  USER
-}
-
-enum UserStatus {
-  INVITED
-  DECLINED
-  ACCEPTED
+  ToUser     User   @relation(fields: [toUserId], references: [id], name: "toUserId")
 }
