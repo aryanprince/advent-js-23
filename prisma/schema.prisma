@@ -10,6 +10,50 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
+model Wishlist {
+    id              Int    @id
+    name            String
+    url             String
+    order           Int
+    siteImage       String
+    siteTitle       String
+    siteDescription String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    userId  Int
+    User    User   @relation(fields: [userId], references: [id])
+    eventId String
+    Event   Event  @relation(fields: [eventId], references: [id])
+}
+
+model Pairing {
+    id        Int      @id
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    eventId       String
+    Event         Event  @relation(fields: [eventId], references: [id])
+    santaId       Int
+    PairingSanta  User   @relation("pairingSanta", fields: [santaId], references: [id])
+    personId      Int
+    PairingPerson User   @relation("pairingPerson", fields: [personId], references: [id])
+}
+
+model ThankYou {
+    id        String   @id
+    message   String
+    createdAt DateTime @default(now())
+
+    eventId    String
+    Event      Event  @relation(fields: [eventId], references: [id])
+    fromUserId Int
+    FromUser   User   @relation("fromUserId", fields: [fromUserId], references: [id])
+    toUserId   Int
+    ToUser     User   @relation("toUserId", fields: [toUserId], references: [id])
+}
+
 model User {
     id        Int      @id
     email     String
@@ -22,6 +66,11 @@ model User {
 
     role            Role
     UserEventStatus UserEventStatus[]
+    Wishlist        Wishlist[]
+    PairingSanta    Pairing[]         @relation("pairingSanta")
+    PairingPerson   Pairing[]         @relation("pairingPerson")
+    ThankYouFrom    ThankYou[]        @relation("fromUserId")
+    ThankYouTo      ThankYou[]        @relation("toUserId")
 }
 
 model UserEventStatus {
@@ -38,11 +87,14 @@ model Event {
     id           String   @id
     name         String
     date         DateTime
+    sendReminder Boolean
     createdAt    DateTime
     updatedAt    DateTime
-    sendReminder Boolean
 
     UserEventStatus UserEventStatus[]
+    Wishlist        Wishlist[]
+    Pairings        Pairing[]
+    ThankYou        ThankYou[]
 }
 
 enum Role {
